@@ -1,0 +1,161 @@
+// 1. put the data into postgres
+
+docker run -it \
+-e POSTGRES_USER=root \
+-e POSTGRES_PASSWORD=root \
+-e POSTGRES_DB=ny_taxi \
+-v "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw" \
+-p 5432:5432 \
+postgres:13 
+
+// 2. ingest the data to database with python script and specify the network
+URL="wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-10.csv.gz"
+
+python ingest_data.py \
+  --user=root \
+  --password=root \
+  --host=localhost \
+  --port=5432 \
+  --db=ny_taxi \
+  --table_name=green_tripdata \
+  --url=${URL}
+
+// for the 2nd table
+URL="wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv"
+
+python ingest_data.py \
+  --user=root \
+  --password=root \
+  --host=localhost \
+  --port=5432 \
+  --db=ny_taxi \
+  --table_name=taxi_zone_lookup \
+  --url=${URL}
+
+// 2.1 check if data ingestion succeed
+SELECT count(1) FROM green_tripdata;
+
+
+// 3. open Admingres for the query
+docker run -it \
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -p 8080:80 \
+  dpage/pgadmin4
+
+
+
+// 4. create network
+docker network create hw1-network
+// 4.1 run database again
+docker run -it \
+-e POSTGRES_USER="root" \
+-e POSTGRES_PASSWORD="root" \
+-e POSTGRES_DB="ny_taxi" \
+-v "./ny_taxi_postgres_data:/var/lib/postgresql/data:rw" \
+-p 5432:5432 \
+--network=hw1-network \
+--name hw1-database \
+postgres:13
+
+docker run -it \
+-e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+-e PGADMIN_DEFAULT_PASSWORD="root" \
+-p 8080:80 \
+--network=hw1-network \
+--name pgadmin-2 \
+dpage/pgadmin4
+
+
+// 5. query the database with the following command
+SELECT 
+    CASE 
+        WHEN trip_distance <= 1 THEN 'Up to 1 mile'
+        WHEN trip_distance > 1 AND trip_distance <= 3 THEN 'Between 1 and 3 miles'
+        WHEN trip_distance > 3 AND trip_distance <= 7 THEN 'Between 3 and 7 miles'
+        WHEN trip_distance > 7 AND trip_distance <= 10 THEN 'Between 7 and 10 miles'
+        ELSE 'Over 10 miles'
+    END AS distance_range,
+    COUNT(*) AS trip_count
+FROM 
+    green_tripdata
+WHERE 
+    lpep_pickup_datetime >= '2019-10-01' 
+    AND lpep_pickup_datetime < '2019-11-01'
+GROUP BY 
+    distance_range;
+
+
+// 6. query for next question
+WITH DailyLongestTrips AS (
+    SELECT 
+        DATE(lpep_pickup_datetime) AS pickup_day,
+        MAX(trip_distance) AS max_trip_distance
+    FROM 
+        green_tripdata
+    GROUP BY 
+        DATE(lpep_pickup_datetime)
+)
+SELECT 
+    pickup_day,
+    max_trip_distance
+FROM 
+    DailyLongestTrips
+ORDER BY 
+    max_trip_distance DESC;
+
+
+// 7. next question
+SELECT 
+    tz."Zone" AS pickup_location,
+    t."PULocationID",
+    SUM(t.total_amount) AS total_amount_sum
+FROM 
+    green_tripdata t
+JOIN 
+    taxi_zone_lookup tz
+ON 
+    t."PULocationID"::text = tz."LocationID"::text
+WHERE 
+    DATE(t.lpep_pickup_datetime) = '2019-10-18'
+GROUP BY 
+    tz."Zone", t."PULocationID"
+HAVING 
+    SUM(t.total_amount) > 13000
+ORDER BY 
+    total_amount_sum DESC;
+
+
+// 8. next question
+SELECT 
+    dropoff_tz."Zone" AS dropoff_zone,
+    MAX(t.tip_amount) AS largest_tip
+FROM 
+    green_tripdata t
+JOIN 
+    taxi_zone_lookup pickup_tz
+ON 
+    t."PULocationID"::text = pickup_tz."LocationID"::text
+JOIN 
+    taxi_zone_lookup dropoff_tz
+ON 
+    t."DOLocationID"::text = dropoff_tz."LocationID"::text
+WHERE 
+    pickup_tz."Zone" = 'East Harlem North' 
+    AND DATE(t.lpep_pickup_datetime) BETWEEN '2019-10-01' AND '2019-10-31'
+GROUP BY 
+    dropoff_tz."Zone"
+ORDER BY 
+    largest_tip DESC
+LIMIT 1;
+
+// 9. terrafrom
+# Downloading the provider plugins and setting up backend:
+# Command: terraform init
+# This initializes the Terraform working directory by downloading provider plugins and configuring the backend.
+# Generating proposed changes and auto-executing the plan:
+# Command: terraform apply -auto-approve
+# This automatically applies the changes (skipping the interactive approval step).
+# Remove all resources managed by Terraform:
+# Command: terraform destroy
+# This destroys all resources defined in the Terraform state.
