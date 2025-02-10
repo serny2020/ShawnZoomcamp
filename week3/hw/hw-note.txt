@@ -1,0 +1,90 @@
+1. create service account in gcp and put the key in the same folder of py script
+2. run script to download data files to gcp
+3. big query set up
+    3.1 create external table in big query
+    ```sql
+    CREATE OR REPLACE EXTERNAL TABLE `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_external_table`
+    OPTIONS (
+    format = 'PARQUET',
+    uris = ['gs://dezoomcamp_hw3_2025_shawn/*.parquet' ]
+    );
+    ```
+    3.2 Create a regular table from the External Table without partition 
+    ```sql
+    CREATE OR REPLACE TABLE `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`
+    AS
+    SELECT * FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_external_table`;
+    ```
+
+2. Write a query to count the distinct number of PULocationIDs for the entire dataset on both the tables.
+    2.1 Query for the External Table
+    ```sql
+    SELECT COUNT(DISTINCT PULocationID) AS distinct_pulocation_count_external
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_external_table`;
+    ```
+    2.2 Query for the Regular Table
+    ```sql
+    SELECT COUNT(DISTINCT PULocationID) AS distinct_pulocation_count_regular
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`;
+    ```
+3. Write a query to retrieve the PULocationID from the table (not the external table) in BigQuery. 
+    ```sql
+    SELECT PULocationID 
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`;
+    ```
+    Bytes processed 155.12 MB 
+    Now write a query to retrieve the PULocationID and DOLocationID on the same table.
+    ```sql
+    SELECT PULocationID, DOLocationID
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`;
+    ```
+    Bytes processed 310.24 MB
+
+4. How many records have a fare_amount of 0?
+    ```sql
+    SELECT COUNT(*) AS zero_fare_count
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`
+    WHERE fare_amount = 0;
+    ```
+
+6. Write a query to retrieve the distinct VendorIDs between tpep_dropoff_datetime 2024-03-01 and 2024-03-15 (inclusive)
+    ```sql
+    SELECT DISTINCT VendorID
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`
+    WHERE DATE(tpep_dropoff_datetime) BETWEEN '2024-03-01' AND '2024-03-15';
+    ``` 
+    Bytes processed 310.24 MB
+    create optimized table
+    ```sql
+    CREATE OR REPLACE TABLE `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_optimized_table`
+    PARTITION BY DATE(tpep_dropoff_datetime)
+    CLUSTER BY VendorID
+    AS
+    SELECT * FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`;
+    ```
+    query the optimized table
+    ```sql
+    SELECT DISTINCT VendorID
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_optimized_table`
+    WHERE tpep_dropoff_datetime BETWEEN '2024-03-01' AND '2024-03-15';
+    ```
+    Bytes processed 26.84 MB
+
+9. Query to Count Rows in the Materialized Table
+    create material view
+    ```sql
+    CREATE MATERIALIZED VIEW `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_mv`
+    AS
+    SELECT
+        DATE(tpep_pickup_datetime) AS trip_date,
+        COUNT(*) AS total_trips,
+        SUM(total_amount) AS total_revenue
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_trips`
+    GROUP BY trip_date;
+    ```
+    ```sql
+    SELECT COUNT(*) 
+    FROM `zoomcamp-hw3-shawn.hw3_yellow_taxi_data.hw3_yellow_taxi_mv`;
+    ```
+    0 Byte
+    The materialized table stores precomputed results so big query doesn't scen anything
