@@ -75,3 +75,6 @@ distData.filter(_ < 10).collect()
 which java
 which pyspark
 ```
+
+### Check Completion Status 
+![sparkTest](./sparkTest.png)
