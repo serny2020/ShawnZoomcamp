@@ -189,6 +189,7 @@ Now we have the data in the Kafka stream. It's time to process it.
     *  Modify it to read from the green-trips topic, ensuring the schema is correctly handled.
     * Use a session window with a 5-minute gap.
     * Set lpep_dropoff_datetime as the watermark, allowing a 5-second tolerance.
+1.5 Clean the data before sending to Kafka.
 2. Identify which pickup and drop-off locations have the longest unbroken streak of taxi trips.
 Run the Kafka producer in hw6.ipynb to populate data.
 Create a landing table in Postgres:
