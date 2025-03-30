@@ -1,0 +1,41 @@
+volumes:
+  kestra-data:
+    driver: local
+
+services:
+  kestra:
+    image: kestra/kestra:latest
+    pull_policy: always
+    user: "root"
+    command: server standalone
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        kestra:
+          server:
+            basicAuth:
+              enabled: false
+              username: "admin@kestra.io"
+              password: kestra
+          repository:
+            type: bigquery
+            bigquery:
+              projectId: your-gcp-project-id
+              dataset: kestra_dataset
+              credentialsPath: /app/secrets/gcp-service-account.json
+          storage:
+            type: local
+            local:
+              basePath: "/app/storage"
+          queue:
+            type: memory
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+    ports:
+      - "8080:8080"
+      - "8081:8081"

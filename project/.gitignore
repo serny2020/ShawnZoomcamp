@@ -37,4 +37,5 @@ override.tf.json
 terraform.rc
 
 
-*.json
+*.json  
+*.csv
