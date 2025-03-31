@@ -1,8 +1,24 @@
 volumes:
+  postgres-data:
+    driver: local
   kestra-data:
     driver: local
 
 services:
+  postgres:
+    image: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
   kestra:
     image: kestra/kestra:latest
     pull_policy: always
@@ -14,24 +30,26 @@ services:
       - /tmp/kestra-wd:/tmp/kestra-wd
     environment:
       KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: k3str4
         kestra:
           server:
             basicAuth:
               enabled: false
-              username: "admin@kestra.io"
+              username: "admin@kestra.io" # it must be a valid email address
               password: kestra
           repository:
-            type: bigquery
-            bigquery:
-              projectId: your-gcp-project-id
-              dataset: kestra_dataset
-              credentialsPath: /app/secrets/gcp-service-account.json
+            type: postgres
           storage:
             type: local
             local:
               basePath: "/app/storage"
           queue:
-            type: memory
+            type: postgres
           tasks:
             tmpDir:
               path: /tmp/kestra-wd/tmp
@@ -39,3 +57,6 @@ services:
     ports:
       - "8080:8080"
       - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_started
