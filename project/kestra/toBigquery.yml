@@ -1,0 +1,125 @@
+id: load_us_accidents_with_merge
+namespace: zoomcamp_proj
+
+variables:
+  gcs_file: "gs://zoomcamp-proj-shawn-bucket/us_accidents.csv"
+  ext_table: "project_dataset.us_accidents_ext"
+  temp_table: "project_dataset.us_accidents_temp"
+  final_table: "project_dataset.us_accidents"
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      projectId: "zoomcamp-hw4-shawn"
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      bucket: "zoomcamp-proj-shawn-bucket"
+
+
+tasks:
+  - id: create_ext_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE EXTERNAL TABLE `{{vars.ext_table}}`
+      (
+        ID STRING,
+        Source STRING,
+        Severity INT64,
+        Start_Time TIMESTAMP,
+        End_Time TIMESTAMP,
+        Start_Lat FLOAT64,
+        Start_Lng FLOAT64,
+        End_Lat FLOAT64,
+        End_Lng FLOAT64,
+        Distance_mi FLOAT64,
+        Description STRING,
+        Street STRING,
+        City STRING,
+        County STRING,
+        State STRING,
+        Zipcode STRING,
+        Country STRING,
+        Timezone STRING,
+        Airport_Code STRING,
+        Weather_Timestamp TIMESTAMP,
+        Temperature_F FLOAT64,
+        Wind_Chill_F FLOAT64,
+        Humidity_pct FLOAT64,
+        Pressure_in FLOAT64,
+        Visibility_mi FLOAT64,
+        Wind_Direction STRING,
+        Wind_Speed_mph FLOAT64,
+        Precipitation_in FLOAT64,
+        Weather_Condition STRING,
+        Amenity BOOL,
+        Bump BOOL,
+        Crossing BOOL,
+        Give_Way BOOL,
+        Junction BOOL,
+        No_Exit BOOL,
+        Railway BOOL,
+        Roundabout BOOL,
+        Station BOOL,
+        Stop BOOL,
+        Traffic_Calming BOOL,
+        Traffic_Signal BOOL,
+        Turning_Loop BOOL,
+        Sunrise_Sunset STRING,
+        Civil_Twilight STRING,
+        Nautical_Twilight STRING,
+        Astronomical_Twilight STRING
+      )
+      OPTIONS (
+        format = 'CSV',
+        uris = ['{{vars.gcs_file}}'],
+        skip_leading_rows = 1,
+        ignore_unknown_values = TRUE
+      );
+
+  - id: create_temp_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE TABLE `{{vars.temp_table}}` AS
+      SELECT
+        MD5(ID) AS unique_row_id,
+        *
+      FROM `{{vars.ext_table}}`;
+
+  - id: merge_into_final_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE TABLE IF NOT EXISTS `{{vars.final_table}}` AS
+      SELECT * EXCEPT(unique_row_id)
+      FROM `{{vars.temp_table}}`
+      WHERE FALSE;
+
+  - id: do_merge
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      MERGE INTO `{{vars.final_table}}` T
+      USING `{{vars.temp_table}}` S
+      ON T.ID = S.ID
+      WHEN NOT MATCHED THEN
+        INSERT (
+          ID, Source, Severity, Start_Time, End_Time,
+          Start_Lat, Start_Lng, End_Lat, End_Lng, Distance_mi,
+          Description, Street, City, County, State, Zipcode, Country,
+          Timezone, Airport_Code, Weather_Timestamp, Temperature_F, Wind_Chill_F,
+          Humidity_pct, Pressure_in, Visibility_mi, Wind_Direction, Wind_Speed_mph,
+          Precipitation_in, Weather_Condition, Amenity, Bump, Crossing, Give_Way,
+          Junction, No_Exit, Railway, Roundabout, Station, Stop, Traffic_Calming,
+          Traffic_Signal, Turning_Loop, Sunrise_Sunset, Civil_Twilight, Nautical_Twilight,
+          Astronomical_Twilight
+        )
+        VALUES (
+          S.ID, S.Source, S.Severity, S.Start_Time, S.End_Time,
+          S.Start_Lat, S.Start_Lng, S.End_Lat, S.End_Lng, S.Distance_mi,
+          S.Description, S.Street, S.City, S.County, S.State, S.Zipcode, S.Country,
+          S.Timezone, S.Airport_Code, S.Weather_Timestamp, S.Temperature_F, S.Wind_Chill_F,
+          S.Humidity_pct, S.Pressure_in, S.Visibility_mi, S.Wind_Direction, S.Wind_Speed_mph,
+          S.Precipitation_in, S.Weather_Condition, S.Amenity, S.Bump, S.Crossing, S.Give_Way,
+          S.Junction, S.No_Exit, S.Railway, S.Roundabout, S.Station, S.Stop, S.Traffic_Calming,
+          S.Traffic_Signal, S.Turning_Loop, S.Sunrise_Sunset, S.Civil_Twilight, S.Nautical_Twilight,
+          S.Astronomical_Twilight
+        );
+
+
