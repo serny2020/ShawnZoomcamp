@@ -1,0 +1,37 @@
+id: upload_kaggle_to_gcs
+namespace: zoomcamp_proj
+description: Download US Accidents dataset via cURL and upload to GCS
+
+variables:
+  zip_file: "us-accidents.zip"
+  csv_file: "US_Accidents_March23.csv"  # should use matching filename after zip
+  gcs_path: "gs://zoomcamp-proj-shawn-bucket/us_accidents.csv"
+
+tasks:
+  - id: download_zip
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+      image: ubuntu:latest
+    commands:
+      - apt-get update && apt-get install -y curl unzip
+      - curl -L -o {{vars.zip_file}} https://www.kaggle.com/api/v1/datasets/download/sobhanmoosavi/us-accidents
+      - unzip {{vars.zip_file}}
+    outputFiles:
+      - "{{vars.csv_file}}"
+
+  - id: upload_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    from: "{{outputs.download_zip.outputFiles[vars.csv_file]}}"
+    to: "{{vars.gcs_path}}"
+
+  - id: purge_temp
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+    disabled: false
+
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values:
+      projectId: "your-gcp-project-id"
+      serviceAccount: "{{kv('GCP_CREDS')}}"
+      bucket: "zoomcamp-proj-shawn-bucket"
