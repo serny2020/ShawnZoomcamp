@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: staging
+    database: zoomcamp-hw4-shawn
+    schema: project_dataset
+    tables:
+      - name: us_accidents
+
