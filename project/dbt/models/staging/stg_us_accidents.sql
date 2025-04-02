@@ -1,13 +1,15 @@
+{{
+    config(
+        materialized='view'
+    )
+}}
+
 with 
-
-source as (
-
+accidents_src as (
     select * from {{ source('staging', 'us_accidents') }}
-
 ),
 
 renamed as (
-
     select
         id,
         source,
@@ -55,9 +57,7 @@ renamed as (
         civil_twilight,
         nautical_twilight,
         astronomical_twilight
-
-    from source
-
+    from accidents_src
 )
 
 select * from renamed
