@@ -3,7 +3,8 @@
         materialized='view'
     )
 }}
-
+-- This staging model pulls the raw us_accidents source data
+-- and renames the columns for consistency before further transformations.
 with 
 accidents_src as (
     select * from {{ source('staging', 'us_accidents') }}
