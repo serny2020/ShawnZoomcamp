@@ -6,4 +6,109 @@ sources:
     schema: project_dataset
     tables:
       - name: us_accidents
+        description: "Raw accidents data loaded from the source system."
+        columns:
+          - name: id
+            description: "Unique identifier for the accident record."
 
+models:
+  - name: stg_us_accidents
+    description: "Staging model for US accidents data. This model pulls raw data from the staging source and renames the columns for consistency and easier downstream analysis."
+    columns:
+      - name: id
+        description: "Unique identifier for the accident record."
+        tests:
+          - unique
+          - not_null
+      - name: severity
+        description: "Severity rating of the accident."
+        tests:
+          - not_null
+      - name: start_time
+        description: "Timestamp when the accident began."
+        tests:
+          - not_null
+      - name: end_time
+        description: "Timestamp when the accident ended."
+      - name: start_lat
+        description: "Starting latitude of the accident location."
+      - name: start_lng
+        description: "Starting longitude of the accident location."
+      - name: end_lat
+        description: "Ending latitude of the accident location."
+      - name: end_lng
+        description: "Ending longitude of the accident location."
+      - name: distance_mi
+        description: "Distance (in miles) related to the accident event."
+      - name: description
+        description: "Description providing details of the accident."
+      - name: street
+        description: "Street where the accident occurred."
+      - name: city
+        description: "City where the accident occurred."
+      - name: county
+        description: "County where the accident occurred."
+      - name: state
+        description: "State where the accident occurred."
+      - name: zipcode
+        description: "Zipcode for the accident location."
+      - name: country
+        description: "Country of the accident."
+      - name: timezone
+        description: "Timezone of the accident location."
+      - name: airport_code
+        description: "Code of the nearest airport."
+      - name: weather_timestamp
+        description: "Timestamp when the weather data was recorded."
+      - name: temperature_f
+        description: "Temperature in Fahrenheit at the time of the accident."
+      - name: wind_chill_f
+        description: "Wind chill in Fahrenheit at the time of the accident."
+      - name: humidity_pct
+        description: "Humidity percentage at the accident location."
+      - name: pressure_in
+        description: "Atmospheric pressure (in inches)."
+      - name: visibility_mi
+        description: "Visibility in miles during the accident event."
+      - name: wind_direction
+        description: "Wind direction as recorded (could be cardinal or numeric)."
+      - name: wind_speed_mph
+        description: "Wind speed in miles per hour."
+      - name: precipitation_in
+        description: "Precipitation in inches."
+      - name: weather_condition
+        description: "Descriptive weather condition during the accident."
+      - name: amenity
+        description: "Indicator if an amenity was nearby."
+      - name: bump
+        description: "Indicator if a bump was present."
+      - name: crossing
+        description: "Indicator if a crossing was present."
+      - name: give_way
+        description: "Indicator if a give way sign was present."
+      - name: junction
+        description: "Indicator if a junction was present."
+      - name: no_exit
+        description: "Indicator if a no exit sign was present."
+      - name: railway
+        description: "Indicator if a railway was present."
+      - name: roundabout
+        description: "Indicator if a roundabout was present."
+      - name: station
+        description: "Indicator if a station was present."
+      - name: stop
+        description: "Indicator if a stop sign was present."
+      - name: traffic_calming
+        description: "Indicator if traffic calming measures were present."
+      - name: traffic_signal
+        description: "Indicator if a traffic signal was present."
+      - name: turning_loop
+        description: "Indicator if a turning loop was present."
+      - name: sunrise_sunset
+        description: "Indicator whether the accident occurred at sunrise or sunset."
+      - name: civil_twilight
+        description: "Civil twilight time at the accident location."
+      - name: nautical_twilight
+        description: "Nautical twilight time at the accident location."
+      - name: astronomical_twilight
+        description: "Astronomical twilight time at the accident location."
