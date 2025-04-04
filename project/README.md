@@ -19,7 +19,7 @@ This project implements an end-to-end data engineering pipeline to visualize a c
 - Other GCP Services: Compute Engine, Docker
 - Python 3.9
 
-## 1. Problem Description
+## Problem Description
 
 **Problem:** Car accidents are a significant public safety concern across the United States, affecting millions of lives and contributing to economic loss and infrastructure strain. However, the large-scale data generated from these incidents is often underutilized due to the challenges of accessing, processing, and visualizing it effectively.
 
@@ -56,7 +56,7 @@ We will create the following GCP resources:
 
 #### 2.2 Navigate to Terraform Directory:
 ```bash
-cd Terraform
+cd terraform
 ```
 
 #### 2.3 Update Variables:
@@ -102,7 +102,7 @@ This command launches the Kestra server, web UI, and executor in the background.
 Once running, the Kestra UI is available at:
 `http://localhost:8080`
 
-#### 3.2 Configure Credentials for GCP and Kaggle
+#### 3.2 Configure Credentials for GCP
 To authenticate your workflows with GCP:
 
 Please place your service account key file (e.g., gcp-sa.json) in a known location and reference it in your workflow definition.
