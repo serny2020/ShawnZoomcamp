@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-This project implements an end-to-end data engineering pipeline to visualize a countrywide car accident dataset covering 49 U.S. states. The goal is to provide insights into the data and develop analytical tools through a pipeline and dashboard. The dataset currently contains approximately 7.7 million accident records, spanning from February 2016 to March 2023.
+This project implements an end-to-end data engineering pipeline to visualize a countrywide car accident dataset[^1] covering 49 U.S. states. The goal is to provide insights into the data and develop analytical tools through a pipeline and dashboard. The dataset currently contains approximately 7.7 million accident records, spanning from February 2016 to March 2023.
+
+[^1]: [Kaggle Source](https://www.kaggle.com/datasets/sobhanmoosavi/us-accidents/data)
 
 ## Project Architecture
 
