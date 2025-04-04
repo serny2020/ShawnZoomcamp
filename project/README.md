@@ -6,7 +6,7 @@ This project implements an end-to-end data engineering pipeline to visualize a c
 
 ## Project Architecture
 
-![pipeline](./image/pipeline.png)
+![pipeline](./images/pipeline.png)
 
 
 ## Technologies
@@ -178,6 +178,10 @@ triggers:
 ### 4. Data Transformation with dbt Cloud
 We will use dbt (Data Build Tool) to transform the raw accident data ingested into BigQuery into clean, analysis-ready tables. The dbt project is organized in this repo under the dbt/ directory, following the standard layered structure for maintainable and scalable data modeling.
 
+Lineage Graph is illustrated below:
+
+![Lineage](images/lineage.png)
+
 #### 4.1 Staging Layer (models/staging/)
 * Pulls raw data from the BigQuery source table
 * Renames and standardizes column names
@@ -204,4 +208,4 @@ The dashboard visualizes the transformed data. It includes at least two tiles:
 * One shows distribution across a category (e.g., spend by state).
 * One shows trends over time (e.g., count of accidents per year and month).
 
-![Dashboard Screenshot](image/dashboard.png)
+![Dashboard Screenshot](images/dashboard.png)
