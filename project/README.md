@@ -211,3 +211,5 @@ The dashboard visualizes the transformed data. It includes at least two tiles:
 * One shows trends over time (e.g., count of accidents per year and month).
 
 ![Dashboard Screenshot](images/dashboard.png)
+
+You can also view the dashboard [here](https://lookerstudio.google.com/reporting/16a59809-0967-43f3-b442-03fe846b9556/page/fMYFF)
